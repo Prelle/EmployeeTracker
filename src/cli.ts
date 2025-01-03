@@ -78,6 +78,8 @@ class Cli {
           console.log("Goodbye!");
           process.exit(0);
       }
+
+      console.log('');
     }
   };
 
@@ -186,7 +188,7 @@ class Cli {
 
       await ApiService.addDepartment(result.name);
 
-      console.log(`Added ${result.name} to the database`);
+      console.log(colors.green(`Added ${result.name} to the database`));
     } catch (error: any) {
       console.log(colors.red(`ERROR: ${error.message}`));
     }
@@ -223,7 +225,7 @@ class Cli {
 
       await ApiService.addRole(result.title, result.salary, result.department);
 
-      console.log(`Added ${result.title} to the database`);
+      console.log(colors.green(`Added ${result.title} to the database`));
     } catch (error: any) {
       console.log(colors.red(`ERROR: ${error.message}`));
     }
@@ -274,7 +276,7 @@ class Cli {
       ]);
 
       await ApiService.addEmployee(result.firstName, result.lastName, result.role, result.manager);
-      console.log(`Added ${result.firstName} ${result.lastName} to the database`);
+      console.log(colors.green(`Added ${result.firstName} ${result.lastName} to the database`));
     } catch (error: any) {
       console.log(colors.red(`ERROR: ${error.message}`));
     }
@@ -313,7 +315,7 @@ class Cli {
 
     const success = await ApiService.updateEmployeeRole(result.employee, result.role);
     if (success) {
-      console.log("Updated employee's role");
+      console.log(colors.cyan("Updated employee's role"));
     } else {
       console.log(colors.red("Employee not found"));
     }
@@ -354,7 +356,7 @@ class Cli {
 
       const success = await ApiService.updateEmployeeManager(result.employee, result.manager);
       if (success) {
-        console.log("Updated employee's manager");
+        console.log(colors.cyan("Updated employee's manager"));
       } else {
         console.log(colors.red("Employee not found"));
       }
@@ -543,8 +545,6 @@ class Cli {
 
       console.log(output);
     }
-
-    console.log('');
   }
 }
 
