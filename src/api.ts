@@ -29,6 +29,26 @@ class ApiService {
             ORDER BY e.id`);
     };
 
+    // Get a list of managers with at least one report
+    async getManagers(): Promise<QueryResult> {
+        return await pool.query(`
+            SELECT DISTINCT e.id, e.first_name, e.last_name
+            FROM employees e
+            JOIN employees m ON e.id = m.manager_id
+            ORDER BY e.id`);
+    };
+
+    // Get a list of all employees who report to a given manager
+    async getEmployeesByManager(manager: number): Promise<QueryResult> {
+        return await pool.query(`
+            SELECT e.id, e.first_name, e.last_name, r.title, d.name as department, r.salary
+            FROM employees e
+            JOIN roles r ON e.role_id = r.id
+            JOIN departments d ON r.department_id = d.id
+            WHERE e.manager_id = $1
+            ORDER BY e.id`, [manager]);
+    };
+
     // Add a new department with the given name
     async addDepartment(name: string): Promise<void> {
         await pool.query(`INSERT INTO departments (name) VALUES ($1)`, [name]);

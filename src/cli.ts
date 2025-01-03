@@ -1,110 +1,149 @@
 import { QueryResult } from 'pg';
 import ApiService from "./api.js";
 import inquirer from "inquirer";
+import colors from "colors";
 
 class Cli {
-  mainMenu(): void {
-    inquirer.prompt([
-      {
-        type: "list",
-        name: "option",
-        message: "What would you like to do?",
-        choices: [
-          "View All Departments",
-          "View All Roles",
-          "View All Employees",
-          "Add a Department",
-          "Add a Role",
-          "Add an Employee",
-          "Update an Employee Role",
-          "Quit",
-        ],
-      }])
-      .then(result => {
-        switch (result.option) {
-          case "View All Departments":
-            this.listDepartments();
-            break;
-          case "View All Roles":
-            this.listRoles();
-            break;
-          case "View All Employees":
-            this.listEmployees();
-            break;
-          case "Add a Department":
-            this.addDepartment();
-            break;
-          case "Add a Role":
-            this.addRole();
-            break;
-          case "Add an Employee":
-            this.addEmployee();
-            break;
-          case "Update an Employee Role":
-            this.updateEmployeeRole();
-            break;
-          case "Quit":
-            console.log("Goodbye!");
-            process.exit(0);
-        }
-      })
+  async mainMenu(): Promise<void> {
+    while (true) {
+      const result = await inquirer.prompt([
+        {
+          type: "list",
+          name: "option",
+          message: "What would you like to do?",
+          choices: [
+            "View All Departments",
+            "View All Roles",
+            "View All Employees",
+            // "View Employees by Manager",
+            // "View Employees by Department",
+            // "View Department Utilized Budgets",
+            "Add a Department",
+            "Add a Role",
+            "Add an Employee",
+            "Update an Employee Role",
+            // "Update an Employee Manager",
+            // "Delete a Department",
+            // "Delete a Role",
+            // "Delete an Employee",
+            "Quit",
+          ],
+        }]);
+
+      switch (result.option) {
+        case "View All Departments":
+          await this.listDepartments();
+          break;
+        case "View All Roles":
+          await this.listRoles();
+          break;
+        case "View All Employees":
+          await this.listEmployees();
+          break;
+        case "View Employees by Manager":
+          await this.viewEmployeesByManager();
+          break;
+        case "View Employees by Department":
+          await this.viewEmployeesByDepartment();
+          break;
+        case "View Department Utilized Budgets":
+          await this.viewDepartmentBudgets();
+          break;
+        case "Add a Department":
+          await this.addDepartment();
+          break;
+        case "Add a Role":
+          await this.addRole();
+          break;
+        case "Add an Employee":
+          await this.addEmployee();
+          break;
+        case "Update an Employee Role":
+          await this.updateEmployeeRole();
+          break;
+        case "Update an Employee Manager":
+          await this.updateEmployeeManager();
+          break;
+        case "Delete a Department":
+          await this.deleteDepartment();
+          break;
+        case "Delete a Role":
+          await this.deleteRole();
+          break;
+        case "Delete an Employee":
+          await this.deleteEmployee();
+          break;
+        case "Quit":
+          console.log("Goodbye!");
+          process.exit(0);
+      }
+    }
   };
 
   // Show the existing departments
-  listDepartments(): void {
-    ApiService.getDepartments().then((departments) => {
+  async listDepartments(): Promise<void> {
+    try {
+      const departments = await ApiService.getDepartments();
       this.showFormattedResults(departments);
-    }).catch((error) => {
-      console.log(`ERROR: ${error.message}`);
-    }).finally(() => this.mainMenu());
+    } catch (error: any) {
+      console.log(colors.red(`ERROR: ${error.message}`));
+    }
   }
 
   // Show the existing roles
-  listRoles(): void {
-    ApiService.getRoles().then((roles) => {
+  async listRoles(): Promise<void> {
+    try {
+      const roles = await ApiService.getRoles();
       this.showFormattedResults(roles);
-    }).catch((error) => {
-      console.log(`ERROR: ${error.message}`);
-    }).finally(() => this.mainMenu());
+    } catch (error: any) {
+      console.log(colors.red(`ERROR: ${error.message}`));
+    }
   }
 
   // Show the existing employees
-  listEmployees(): void {
-    ApiService.getEmployees().then((employees) => {
+  async listEmployees(): Promise<void> {
+    try {
+      const employees = await ApiService.getEmployees();
       this.showFormattedResults(employees);
-    }).catch((error) => {
-      console.log(`ERROR: ${error.message}`);
-    }).finally(() => this.mainMenu());
+    } catch (error: any) {
+      console.log(colors.red(`ERROR: ${error.message}`));
+    }
   }
 
+  async viewEmployeesByManager(): Promise<void> { }
+  async viewEmployeesByDepartment(): Promise<void> { }
+  async viewDepartmentBudgets(): Promise<void> { }
+
   // Add a new department to the database
-  addDepartment(): void {
-    inquirer.prompt([
-      {
-        type: "input",
-        name: "name",
-        message: "What is the name of the department?",
-      }
-    ])
-      .then((result) => {
-        ApiService.addDepartment(result.name).then(() => {
-          console.log(`Added ${result.name} to the database`);
-        }).catch((error) => {
-          console.log(`ERROR: ${error.message}`);
-        }).finally(() => this.mainMenu());
-      });
+  async addDepartment(): Promise<void> {
+    try {
+      const result = await inquirer.prompt([
+        {
+          type: "input",
+          name: "name",
+          message: "What is the name of the department?",
+        }
+      ]);
+
+      await ApiService.addDepartment(result.name);
+
+      console.log(`Added ${result.name} to the database`);
+    } catch (error: any) {
+      console.log(colors.red(`ERROR: ${error.message}`));
+    }
   }
 
   // Add a new role to the database
-  addRole(): void {
-    // Get the list of departments from the DB
-    ApiService.getDepartments().then((departments) => {
+  async addRole(): Promise<void> {
+    try {
+      // Get the list of departments from the DB
+      const departments = await ApiService.getDepartments();
       const departmentChoices = departments.rows.map((department: any) => ({
         name: department.name,
         value: department.id,
       }));
 
-      inquirer.prompt([
+      const result = await inquirer.prompt([
         {
           type: "input",
           name: "title",
@@ -121,113 +160,110 @@ class Cli {
           message: "Which department does the role belong to?",
           choices: departmentChoices,
         }
-      ])
-        .then((result) => {
-          ApiService.addRole(result.title, result.salary, result.department).then(() => {
-            console.log(`Added ${result.title} to the database`);
-          }).catch((error) => {
-            console.log(`ERROR: ${error.message}`);
-          }).finally(() => this.mainMenu());
-        });
-    });
+      ]);
+
+      await ApiService.addRole(result.title, result.salary, result.department);
+
+      console.log(`Added ${result.title} to the database`);
+    } catch (error: any) {
+      console.log(colors.red(`ERROR: ${error.message}`));
+    }
   }
 
   // Add a new employee to the database
-  addEmployee(): void {
-    // Get a list of roles from the DB
-    ApiService.getRoles().then((roles) => {
+  async addEmployee(): Promise<void> {
+    try {
+      // Get a list of roles from the DB
+      const roles = await ApiService.getRoles();
       const roleChoices = roles.rows.map((role: any) => ({
         name: role.title,
         value: role.id
       }));
 
       // Get a list of employees for the manager field
-      ApiService.getEmployees().then((employees) => {
-        const managerChoices = [
-          { name: "None", value: null }].concat(
-            employees.rows.map((employee: any) => ({
-              name: `${employee.first_name} ${employee.last_name}`,
-              value: employee.id
-            })));
+      const employees = await ApiService.getEmployees();
+      const managerChoices = [
+        { name: "None", value: null }].concat(
+          employees.rows.map((employee: any) => ({
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id
+          })));
 
-        inquirer.prompt([
-          {
-            type: "input",
-            name: "firstName",
-            message: "What is the employee's first name?",
-          },
-          {
-            type: "input",
-            name: "lastName",
-            message: "What is the employee's last name?",
-          },
-          {
-            type: "list",
-            name: "role",
-            message: "What is the employee's role?",
-            choices: roleChoices,
-          },
-          {
-            type: "list",
-            name: "manager",
-            message: "Who is the employee's manager?",
-            choices: managerChoices,
-          },
-        ])
-          .then((result) => {
-            ApiService.addEmployee(result.firstName, result.lastName, result.role, result.manager).then(() => {
-              console.log(`Added ${result.firstName} ${result.lastName} to the database`);
-            }).catch((error) => {
-              console.log(`ERROR: ${error.message}`);
-            }).finally(() => this.mainMenu());
-          });
-      });
-    });
+      const result = await inquirer.prompt([
+        {
+          type: "input",
+          name: "firstName",
+          message: "What is the employee's first name?",
+        },
+        {
+          type: "input",
+          name: "lastName",
+          message: "What is the employee's last name?",
+        },
+        {
+          type: "list",
+          name: "role",
+          message: "What is the employee's role?",
+          choices: roleChoices,
+        },
+        {
+          type: "list",
+          name: "manager",
+          message: "Who is the employee's manager?",
+          choices: managerChoices,
+        },
+      ]);
+
+      await ApiService.addEmployee(result.firstName, result.lastName, result.role, result.manager);
+      console.log(`Added ${result.firstName} ${result.lastName} to the database`);
+    } catch (error: any) {
+      console.log(colors.red(`ERROR: ${error.message}`));
+    }
   }
 
   // Update an existing employee's role
-  updateEmployeeRole(): void {
-    // Get a list of employees and roles from the DB
-    ApiService.getEmployees().then((employees) => {
-      const employeeChoices = employees.rows.map((employee: any) => ({
-        name: `${employee.first_name} ${employee.last_name}`,
-        value: employee.id
-      }));
+  async updateEmployeeRole(): Promise<void> {
+    // Get a list of employees from the DB
+    const employees = await ApiService.getEmployees();
+    const employeeChoices = employees.rows.map((employee: any) => ({
+      name: `${employee.first_name} ${employee.last_name}`,
+      value: employee.id
+    }));
 
-      ApiService.getRoles().then((roles) => {
-        const roleChoices = roles.rows.map((role: any) => ({
-          name: role.title,
-          value: role.id
-        }));
+    // Get a list of roles from the DB
+    const roles = await ApiService.getRoles();
+    const roleChoices = roles.rows.map((role: any) => ({
+      name: role.title,
+      value: role.id
+    }));
 
-        inquirer.prompt([
-          {
-            type: "list",
-            name: "employee",
-            message: "Which employee's role do you want to update?",
-            choices: employeeChoices,
-          },
-          {
-            type: "list",
-            name: "role",
-            message: "Which role do you want to assign the selected employee?",
-            choices: roleChoices,
-          }
-        ])
-          .then((result) => {
-            ApiService.updateEmployeeRole(result.employee, result.role).then((success) => {
-              if (success) {
-                console.log("Updated employee's role");
-              } else {
-                console.log("Employee not found");
-              }
-            }).catch((error) => {
-              console.log(`ERROR: ${error.message}`);
-            }).finally(() => this.mainMenu());
-          });
-      });
-    });
+    const result = await inquirer.prompt([
+      {
+        type: "list",
+        name: "employee",
+        message: "Which employee's role do you want to update?",
+        choices: employeeChoices,
+      },
+      {
+        type: "list",
+        name: "role",
+        message: "Which role do you want to assign the selected employee?",
+        choices: roleChoices,
+      }
+    ]);
+
+    const success = await ApiService.updateEmployeeRole(result.employee, result.role);
+    if (success) {
+      console.log("Updated employee's role");
+    } else {
+      console.log(colors.red("Employee not found"));
+    }
   }
+
+  async updateEmployeeManager(): Promise<void> { }
+  async deleteDepartment(): Promise<void> { }
+  async deleteRole(): Promise<void> { }
+  async deleteEmployee(): Promise<void> { }
 
   // Output formatted results from a SQL QueryResult to the console
   showFormattedResults(results: QueryResult): void {
