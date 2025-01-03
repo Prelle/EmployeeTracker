@@ -19,9 +19,9 @@ A PostgreSQL database is required to run the application. The `schema.sql` file 
 
 Assuming Postgres has been installed, you can execute the following commands from the repo folder after cloning to construct the database:
 
-`psql -U <username>` (default user is postgres; you will be asked to provide your admin password)
-`\i db/schema.sql`
-`\i db/seeds.sql` (optional; use only if test data is required)
+`psql -U <username>` (default user is postgres; you will be asked to provide your admin password)<br>
+`\i db/schema.sql`<br>
+`\i db/seeds.sql` (optional; use only if test data is required)<br>
 `\q`
 
 ## Installation

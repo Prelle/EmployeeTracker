@@ -507,6 +507,8 @@ class Cli {
 
   // Output formatted results from a SQL QueryResult to the console
   showFormattedResults(results: QueryResult): void {
+    console.log('');
+
     if (results.rows.length === 0) {
       console.log("No results found.");
       return;
@@ -541,6 +543,8 @@ class Cli {
 
       console.log(output);
     }
+
+    console.log('');
   }
 }
 
