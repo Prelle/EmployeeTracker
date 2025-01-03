@@ -21,9 +21,9 @@ CREATE TABLE employees (
   id SERIAL PRIMARY KEY,
   first_name VARCHAR(30) NOT NULL,
   last_name VARCHAR(30) NOT NULL,
-  role_id INTEGER NOT NULL
+  role_id INTEGER NULL
     REFERENCES roles(id)
-    ON DELETE CASCADE,  
+    ON DELETE SET NULL,
   manager_id INTEGER
     REFERENCES employees(id)
     ON DELETE SET NULL

@@ -23,8 +23,8 @@ class ApiService {
         return await pool.query(`
             SELECT e.id, e.first_name, e.last_name, r.title, d.name as department, r.salary, CONCAT(m.first_name, ' ', m.last_name) as manager
             FROM employees e
-            JOIN roles r ON e.role_id = r.id
-            JOIN departments d ON r.department_id = d.id
+            LEFT JOIN roles r ON e.role_id = r.id
+            LEFT JOIN departments d ON r.department_id = d.id
             LEFT JOIN employees m ON e.manager_id = m.id
             ORDER BY e.id`);
     };
@@ -43,11 +43,52 @@ class ApiService {
         return await pool.query(`
             SELECT e.id, e.first_name, e.last_name, r.title, d.name as department, r.salary
             FROM employees e
-            JOIN roles r ON e.role_id = r.id
-            JOIN departments d ON r.department_id = d.id
+            LEFT JOIN roles r ON e.role_id = r.id
+            LEFT JOIN departments d ON r.department_id = d.id
             WHERE e.manager_id = $1
             ORDER BY e.id`, [manager]);
     };
+
+    // Get a list of all employees who belong to a given department
+    async getEmployeesByDepartment(department: number): Promise<QueryResult> {
+        return await pool.query(`
+            SELECT e.id, e.first_name, e.last_name, r.title, r.salary, CONCAT(m.first_name, ' ', m.last_name) as manager
+            FROM employees e
+            JOIN roles r ON e.role_id = r.id
+            LEFT JOIN employees m ON e.manager_id = m.id
+            WHERE r.department_id = $1
+            ORDER BY e.id`, [department]);
+    };
+
+    // Get a list of all employees who belong to a given role
+    async getEmployeesByRole(role: number): Promise<QueryResult> {
+        return await pool.query(`
+            SELECT e.id, e.first_name, e.last_name, CONCAT(m.first_name, ' ', m.last_name) as manager
+            FROM employees e            
+            LEFT JOIN employees m ON e.manager_id = m.id
+            WHERE e.role_id = $1
+            ORDER BY e.id`, [role]);
+    };
+
+    // Get a list of roles belonging to a given department
+    async getRolesByDepartment(department: number): Promise<QueryResult> {
+        return await pool.query(`
+            SELECT r.id, r.title, r.salary
+            FROM roles r
+            WHERE r.department_id = $1
+            ORDER BY r.id`, [department]);
+    }
+
+    // Get the total utilized budgets of all departments
+    async getDepartmentBudgets(): Promise<QueryResult> {
+        return await pool.query(`
+            SELECT d.id, d.name, SUM(r.salary) as utilized_budget
+            FROM employees e
+            JOIN roles r ON e.role_id = r.id
+            JOIN departments d ON r.department_id = d.id
+            GROUP BY d.id, d.name
+            ORDER BY d.id`);
+    }
 
     // Add a new department with the given name
     async addDepartment(name: string): Promise<void> {
@@ -68,6 +109,50 @@ class ApiService {
     // Update an employee's role; return false if the employee wasn't found
     async updateEmployeeRole(employee: number, role: number): Promise<boolean> {
         const result = await pool.query(`UPDATE employees SET role_id = $1 WHERE id = $2`, [role, employee]);
+
+        if (result.rowCount === 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Update an employee's manager; return false if the employee wasn't found
+    async updateEmployeeManager(employee: number, manager: number): Promise<boolean> {
+        const result = await pool.query(`UPDATE employees SET manager_id = $1 WHERE id = $2`, [manager, employee]);
+
+        if (result.rowCount === 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Delete a department from the database; return false if the department wasn't found
+    async deleteDepartment(department: number): Promise<boolean> {
+        const result = await pool.query(`DELETE FROM departments WHERE id = $1`, [department]);
+
+        if (result.rowCount === 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Delete a role from the database; return false if the role wasn't found
+    async deleteRole(role: number): Promise<boolean> {
+        const result = await pool.query(`DELETE FROM roles WHERE id = $1`, [role]);
+
+        if (result.rowCount === 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Delete an employee record from the database; return false if the employee wasn't found
+    async deleteEmployee(employee: number): Promise<boolean> {
+        const result = await pool.query(`DELETE FROM employees WHERE id = $1`, [employee]);
 
         if (result.rowCount === 0) {
             return false;
